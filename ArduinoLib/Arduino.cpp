@@ -218,6 +218,8 @@ static int mkpath (const char *path, int mode)
  */
 static void mkAppDir(const char *user_dir)
 {
+        char file_path[2048];
+
         // use user_dir else default
         if (user_dir) {
             our_dir = user_dir;
@@ -238,6 +240,29 @@ static void mkAppDir(const char *user_dir)
             fprintf (stderr, "%s: %s\n", path, strerror(errno));
             exit(1);
         }
+
+
+        // Remove the esats.txt file if it exists to force a new new file
+        // This is to ensure than during the switchover to the OHB backend
+        // a badly aged esats file is used by virtua of recent timestamp
+
+        Serial.printf("User dir is: %s\n", our_dir.c_str());
+
+    // the user dir ends with '/' already
+
+        snprintf(file_path, sizeof(file_path), "%s%s", our_dir.c_str(), "esats.txt");
+        if (remove(file_path) == 0) {
+            Serial.printf( "Deleted file: %s\n", file_path);
+        } else {
+            if (errno == ENOENT) {
+                Serial.printf( "File did not exist: %s\n", file_path);
+            } else {
+                Serial.printf("Failed to delete %s: %s\n",
+                       file_path, strerror(errno));
+            }
+        }
+
+
 }
 
 /* convert the given ISO 8601 date-time string to UNIX seconds in usr_datetime.
